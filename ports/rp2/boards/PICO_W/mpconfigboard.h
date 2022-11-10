@@ -7,6 +7,9 @@
 // Enable networking.
 #define MICROPY_PY_NETWORK 1
 
+// Enable AES CTR
+#define MICROPY_PY_UCRYPTOLIB_CTR (1)
+
 // CYW43 driver configuration.
 #define CYW43_USE_SPI (1)
 #define CYW43_LWIP (1)

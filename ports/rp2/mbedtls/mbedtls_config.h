@@ -43,6 +43,9 @@ time_t rp2_rtctime_seconds(time_t *timer);
 // Set MicroPython-specific options.
 #define MICROPY_MBEDTLS_CONFIG_BARE_METAL (1)
 
+// Enable AES CTR
+#define MBEDTLS_CIPHER_MODE_CTR
+
 // Include common mbedtls configuration.
 #include "extmod/mbedtls/mbedtls_config_common.h"
 
