@@ -9,6 +9,8 @@
 #define MICROPY_PY_SYS_PLATFORM     "Portenta"
 #define MICROPY_HW_FLASH_FS_LABEL   "portenta"
 
+#define MICROPY_PY_NETWORK_HOSTNAME_DEFAULT "Portenta"
+
 #define MICROPY_OBJ_REPR            (MICROPY_OBJ_REPR_C)
 #define UINT_FMT                    "%u"
 #define INT_FMT                     "%d"
@@ -159,6 +161,9 @@ extern struct _spi_bdev_t spi_bdev;
 #define MICROPY_HW_UART7_CTS        (pyb_pin_BT_CTS)
 
 // I2C busses
+#define MICROPY_HW_I2C1_SCL         (pin_B6)
+#define MICROPY_HW_I2C1_SDA         (pin_B7)
+
 #define MICROPY_HW_I2C3_SCL         (pin_H7)
 #define MICROPY_HW_I2C3_SDA         (pin_H8)
 
@@ -206,8 +211,8 @@ extern struct _spi_bdev_t spi_bdev;
 #define MICROPY_HW_USB_HS_ULPI_DIR  (pin_I11)
 #define MICROPY_HW_USB_HS_ULPI3320  (1)
 
-#define MICROPY_HW_USB_CDC_RX_DATA_SIZE     (512)
-#define MICROPY_HW_USB_CDC_TX_DATA_SIZE     (512)
+#define MICROPY_HW_USB_CDC_RX_DATA_SIZE     (1024)
+#define MICROPY_HW_USB_CDC_TX_DATA_SIZE     (1024)
 #define MICROPY_HW_USB_CDC_1200BPS_TOUCH    (1)
 #define GPIO_AF10_OTG_HS                    (GPIO_AF10_OTG2_HS)
 
