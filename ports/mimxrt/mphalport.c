@@ -90,7 +90,7 @@ uintptr_t mp_hal_stdio_poll(uintptr_t poll_flags) {
         ret |= MP_STREAM_POLL_WR;
     }
     #if MICROPY_PY_OS_DUPTERM
-    ret |= mp_uos_dupterm_poll(poll_flags);
+    ret |= mp_os_dupterm_poll(poll_flags);
     #endif
     return ret;
 }
@@ -103,7 +103,7 @@ int mp_hal_stdin_rx_chr(void) {
             return c;
         }
         #if MICROPY_PY_OS_DUPTERM
-        int dupterm_c = mp_uos_dupterm_rx_chr();
+        int dupterm_c = mp_os_dupterm_rx_chr();
         if (dupterm_c >= 0) {
             return dupterm_c;
         }
@@ -112,9 +112,12 @@ int mp_hal_stdin_rx_chr(void) {
     }
 }
 
-void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
+mp_uint_t mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
+    mp_uint_t ret = len;
+    bool did_write = false;
     if (tud_cdc_connected()) {
-        for (size_t i = 0; i < len;) {
+        size_t i = 0;
+        while (i < len) {
             uint32_t n = len - i;
             if (n > CFG_TUD_CDC_EP_BUFSIZE) {
                 n = CFG_TUD_CDC_EP_BUFSIZE;
@@ -125,6 +128,7 @@ void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
                 MICROPY_EVENT_POLL_HOOK
             }
             if (ticks_us64() >= timeout) {
+                ret = i;
                 break;
             }
 
@@ -132,10 +136,17 @@ void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len) {
             tud_cdc_write_flush();
             i += n2;
         }
+        did_write = true;
+        ret = MIN(i, ret);
     }
     #if MICROPY_PY_OS_DUPTERM
-    mp_uos_dupterm_tx_strn(str, len);
+    int dupterm_res = mp_os_dupterm_tx_strn(str, len);
+    if (dupterm_res >= 0) {
+        did_write = true;
+        ret = MIN((mp_uint_t)dupterm_res, ret);
+    }
     #endif
+    return did_write ? ret : 0;
 }
 
 uint64_t mp_hal_time_ns(void) {

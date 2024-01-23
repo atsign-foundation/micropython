@@ -26,6 +26,7 @@
 
 #include "py/runtime.h"
 #include "py/gc.h"
+#include "py/mphal.h"
 #include "py/mpthread.h"
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
@@ -116,7 +117,13 @@ STATIC void core1_entry_wrapper(void) {
     // returning from here will loop the core forever (WFI)
 }
 
-void mp_thread_create(void *(*entry)(void *), void *arg, size_t *stack_size) {
+mp_uint_t mp_thread_get_id(void) {
+    // On RP2, there are only two threads, one for each core, so the thread id
+    // is the core number.
+    return get_core_num();
+}
+
+mp_uint_t mp_thread_create(void *(*entry)(void *), void *arg, size_t *stack_size) {
     // Check if core1 is already in use.
     if (core1_entry != NULL) {
         mp_raise_msg(&mp_type_OSError, MP_ERROR_TEXT("core1 in use"));
@@ -144,6 +151,8 @@ void mp_thread_create(void *(*entry)(void *), void *arg, size_t *stack_size) {
 
     // Adjust stack_size to provide room to recover from hitting the limit.
     *stack_size -= 512;
+
+    return 1;
 }
 
 void mp_thread_start(void) {

@@ -40,6 +40,7 @@
 #include "py/objmodule.h"
 #include "py/objgenerator.h"
 #include "py/smallint.h"
+#include "py/stream.h"
 #include "py/runtime.h"
 #include "py/builtin.h"
 #include "py/stackctrl.h"
@@ -69,11 +70,10 @@ void mp_init(void) {
     // no pending exceptions to start with
     MP_STATE_THREAD(mp_pending_exception) = MP_OBJ_NULL;
     #if MICROPY_ENABLE_SCHEDULER
+    // no pending callbacks to start with
+    MP_STATE_VM(sched_state) = MP_SCHED_IDLE;
     #if MICROPY_SCHEDULER_STATIC_NODES
-    if (MP_STATE_VM(sched_head) == NULL) {
-        // no pending callbacks to start with
-        MP_STATE_VM(sched_state) = MP_SCHED_IDLE;
-    } else {
+    if (MP_STATE_VM(sched_head) != NULL) {
         // pending callbacks are on the list, eg from before a soft reset
         MP_STATE_VM(sched_state) = MP_SCHED_PENDING;
     }
@@ -136,13 +136,17 @@ void mp_init(void) {
     #endif
 
     #if MICROPY_PY_SYS_PATH_ARGV_DEFAULTS
-    mp_obj_list_init(MP_OBJ_TO_PTR(mp_sys_path), 0);
+    #if MICROPY_PY_SYS_PATH
+    mp_sys_path = mp_obj_new_list(0, NULL);
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_)); // current dir (or base dir of the script)
     #if MICROPY_MODULE_FROZEN
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__dot_frozen));
     #endif
+    #endif
+    #if MICROPY_PY_SYS_ARGV
     mp_obj_list_init(MP_OBJ_TO_PTR(mp_sys_argv), 0);
     #endif
+    #endif // MICROPY_PY_SYS_PATH_ARGV_DEFAULTS
 
     #if MICROPY_PY_SYS_ATEXIT
     MP_STATE_VM(sys_exitfunc) = mp_const_none;
@@ -192,6 +196,11 @@ void mp_globals_locals_set_from_nlr_jump_callback(void *ctx_in) {
     nlr_jump_callback_node_globals_locals_t *ctx = ctx_in;
     mp_globals_set(ctx->globals);
     mp_locals_set(ctx->locals);
+}
+
+void mp_call_function_1_from_nlr_jump_callback(void *ctx_in) {
+    nlr_jump_callback_node_call_function_1_t *ctx = ctx_in;
+    ctx->func(ctx->arg);
 }
 
 mp_obj_t MICROPY_WRAP_MP_LOAD_NAME(mp_load_name)(qstr qst) {
@@ -1319,7 +1328,6 @@ mp_obj_t mp_getiter(mp_obj_t o_in, mp_obj_iter_buf_t *iter_buf) {
 
 STATIC mp_fun_1_t type_get_iternext(const mp_obj_type_t *type) {
     if ((type->flags & MP_TYPE_FLAG_ITER_IS_STREAM) == MP_TYPE_FLAG_ITER_IS_STREAM) {
-        mp_obj_t mp_stream_unbuffered_iter(mp_obj_t self);
         return mp_stream_unbuffered_iter;
     } else if (type->flags & MP_TYPE_FLAG_ITER_IS_ITERNEXT) {
         return (mp_fun_1_t)MP_OBJ_TYPE_GET_SLOT(type, iter);

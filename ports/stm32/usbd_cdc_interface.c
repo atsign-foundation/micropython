@@ -44,17 +44,17 @@
 
 #include "py/runtime.h"
 #include "py/mphal.h"
+#include "extmod/modmachine.h"
 #include "shared/runtime/interrupt_char.h"
 #include "irq.h"
-#include "modmachine.h"
 
 #if MICROPY_HW_ENABLE_USB
 
 #if !MICROPY_HW_USB_IS_MULTI_OTG
 #define USE_USB_CNTR_SOFM (1)
-#elif defined(STM32G0)
-#define USE_USB_CNTR_SOFM (1)
+#if defined(STM32G0) || defined(STM32H5)
 #define USB USB_DRD_FS
+#endif
 #else
 #define USE_USB_CNTR_SOFM (0)
 #endif
