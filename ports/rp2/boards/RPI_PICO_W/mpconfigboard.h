@@ -9,7 +9,7 @@
 #define MICROPY_PY_NETWORK_HOSTNAME_DEFAULT     "PicoW"
 
 // Enable AES CTR
-#define MICROPY_PY_UCRYPTOLIB_CTR (1)
+#define MICROPY_PY_CRYPTOLIB_CTR (1)
 
 // CYW43 driver configuration.
 #define CYW43_USE_SPI (1)
